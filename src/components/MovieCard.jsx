@@ -1,53 +1,169 @@
-import React from "react";
+// import React from "react";
+// import { MovieContext } from "./MovieContext";
+// import { useContext } from "react";
+// import { Link } from "react-router-dom";
+// import PropTypes from 'prop-types';
+
+// function MovieCard({ movieObject }) {
+
+//   let {watchlist , handleAddtoWatchList ,DeleteFromWatchList } = useContext(MovieContext)
+
+//   function doesContain() {
+//     for (let i = 0; i < watchlist.length; i++) {
+//       if (watchlist[i].id === movieObject.id) {
+//         return true; // chnage button to cross
+//       }
+//     }
+//     return false; // added to my WatchList
+//   }
+
+//   return (
+//     <div
+//       className="h-[40vh] w-[200px] bg-center bg-cover rounded-xl hover:scale-110 duration-300 hover:cursor-pointer flex flex-col justify-between items-end"
+//       style={{
+//         backgroundImage: `url(https://image.tmdb.org/t/p/original/${movieObject.poster_path})`,
+//       }}
+//     >
+//       {doesContain(movieObject) ? (
+//         <div onClick={()=>DeleteFromWatchList(movieObject)} className="m-4 flex justify-center h-8 w-8 items-center rounded-lg bg-gray-900/60">
+//           &#10060;
+//           {/* // code for cross */}
+//         </div>
+//       ) : (
+//         <div
+//           onClick={() => handleAddtoWatchList (movieObject)}
+//           className="m-4 flex justify-center h-8 w-8 items-center rounded-lg bg-gray-900/60"
+//         >
+//           &#128525;
+//         </div>
+//       )}
+
+
+
+//       <div className="text-white w-full text-center text-xl p-2 bg-gray-900/70 rounded-lg">
+//         {movieObject.title}
+//       </div>
+
+//       <Link to={`/details/${movieObject.id}`} ><i className="fa-solid fa-circle-info text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"></i></Link>
+     
+//     </div>
+     
+//   );
+// }
+// MovieCard.propTypes = {
+//   movieObject: PropTypes.shape({
+//     id: PropTypes.number.isRequired,
+//     // add other expected properties of movieObject
+//   }),
+// };
+// export default MovieCard;
+
+import React, { useState, useContext } from "react";
 import { MovieContext } from "./MovieContext";
-import { useContext } from "react";
-import { Link } from "react-router-dom";
 import PropTypes from 'prop-types';
 
-function MovieCard({ movieObject }) {
+import { Link } from "react-router-dom";
+import { getMovieVideos } from '../services/movieService.js';
+import TrailerModal from './TrailerModal';
 
-  let {watchlist , handleAddtoWatchList ,DeleteFromWatchList } = useContext(MovieContext)
+function MovieCard({ movieObject }) {
+  const { watchlist, handleAddtoWatchList, DeleteFromWatchList } = useContext(MovieContext);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [loadingTrailer, setLoadingTrailer] = useState(false);
 
   function doesContain() {
-    for (let i = 0; i < watchlist.length; i++) {
+    for (let i = 0; i < watchlist?.length; i++) {
       if (watchlist[i].id === movieObject.id) {
-        return true; // chnage button to cross
+        return true; // change button to cross
       }
     }
     return false; // added to my WatchList
   }
 
+  const handleWatchTrailer = async (e) => {
+    e.preventDefault(); // Prevent any parent click events
+    e.stopPropagation();
+    
+    setLoadingTrailer(true);
+    
+    try {
+      const videos = await getMovieVideos(movieObject.id);
+      
+      if (videos.length > 0) {
+        setTrailerKey(videos[0].key);
+      } else {
+        setTrailerKey(null);
+      }
+      
+      setShowTrailer(true);
+    } catch (error) {
+      console.error('Error fetching trailer:', error);
+      setTrailerKey(null);
+      setShowTrailer(true);
+    } finally {
+      setLoadingTrailer(false);
+    }
+  };
+
   return (
-    <div
-      className="h-[40vh] w-[200px] bg-center bg-cover rounded-xl hover:scale-110 duration-300 hover:cursor-pointer flex flex-col justify-between items-end"
-      style={{
-        backgroundImage: `url(https://image.tmdb.org/t/p/original/${movieObject.poster_path})`,
-      }}
-    >
-      {doesContain(movieObject) ? (
-        <div onClick={()=>DeleteFromWatchList(movieObject)} className="m-4 flex justify-center h-8 w-8 items-center rounded-lg bg-gray-900/60">
-          &#10060;
-          {/* // code for cross */}
+    <>
+      <div
+        className="h-[40vh] w-[200px] bg-center bg-cover rounded-xl hover:scale-110 duration-300 hover:cursor-pointer flex flex-col justify-between items-end"
+        style={{
+          backgroundImage: `url(https://image.tmdb.org/t/p/original/${movieObject?.poster_path})`,
+        }}
+      >
+        {doesContain(movieObject) ? (
+          <div 
+            onClick={() => DeleteFromWatchList(movieObject)} 
+            className="m-4 flex justify-center h-8 w-8 items-center rounded-lg bg-gray-900/60"
+          >
+            &#10060;
+            {/* // code for cross */}
+          </div>
+        ) : (
+          <div
+            onClick={() => handleAddtoWatchList(movieObject)}
+            className="m-4 flex justify-center h-8 w-8 items-center rounded-lg bg-gray-900/60"
+          >
+            &#128525;
+          </div>
+        )}
+
+        <div className="text-white w-full text-center text-xl p-2 bg-gray-900/70 rounded-lg">
+          {movieObject?.title}
         </div>
-      ) : (
-        <div
-          onClick={() => handleAddtoWatchList (movieObject)}
-          className="m-4 flex justify-center h-8 w-8 items-center rounded-lg bg-gray-900/60"
-        >
-          &#128525;
+
+        {/* Action Buttons Container */}
+        <div className="flex gap-2 mb-2">
+          <Link to={`/details/${movieObject?.id}`}>
+            <i className="fa-solid fa-circle-info text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-2"></i>
+          </Link>
+          
+          <button
+            onClick={handleWatchTrailer}
+            disabled={loadingTrailer}
+            className="text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-3 py-2 flex items-center"
+            title="Watch Trailer"
+          >
+            {loadingTrailer ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              "▶️"
+            )}
+          </button>
         </div>
-      )}
-
-
-
-      <div className="text-white w-full text-center text-xl p-2 bg-gray-900/70 rounded-lg">
-        {movieObject.title}
       </div>
 
-      <Link to={`/details/${movieObject.id}`} ><i className="fa-solid fa-circle-info text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"></i></Link>
-     
-    </div>
-     
+      {/* Trailer Modal */}
+      <TrailerModal
+        isOpen={showTrailer}
+        onClose={() => setShowTrailer(false)}
+        trailerKey={trailerKey}
+        movieTitle={movieObject?.title}
+      />
+    </>
   );
 }
 MovieCard.propTypes = {
@@ -56,4 +172,5 @@ MovieCard.propTypes = {
     // add other expected properties of movieObject
   }),
 };
+
 export default MovieCard;
