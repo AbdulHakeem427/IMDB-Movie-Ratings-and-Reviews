@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize the Gemini API with your API key
-const genAI = new GoogleGenerativeAI('AIzaSyDGZuEmHxpAnXFt4geAxGsB6zHrthn_-sQ');
+const genAI = new GoogleGenerativeAI('AIzaSyB2OYi_MBEEWAXbliM3uHJzfzDyWZHXdi8');
 
 // Create a reusable model instance
 export const getGeminiModel = async () => {
